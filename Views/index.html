@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Relatórios</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+            left: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #4cd964;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+        /* styles.css */
+        .red-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Estilo para o overlay do spinner */
+        .full-screen-spinner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Cor de fundo branca semi-transparente */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            /* Garante que o spinner está acima de outros elementos */
+            visibility: hidden;
+            /* Inicialmente escondido */
+            opacity: 0;
+            /* Inicialmente invisível */
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            /* Animação de transição */
+        }
+
+        /* Estilo para o spinner */
+        .loader {
+            border: 8px solid rgba(0, 0, 0, 0.1);
+            /* Cor da borda do spinner */
+            border-radius: 50%;
+            border-top: 8px solid #000;
+            /* Cor da parte superior do spinner */
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            /* Animação de rotação */
+        }
+
+        /* Animação de rotação do spinner */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Classe para mostrar o spinner */
+        .full-screen-spinner.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        body.light {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        body.dark {
+            background-color: #212121;
+            color: #FFFFFF;
+        }
+
+        .header.dark {
+            padding: 15px;
+            background-color: #171717;
+            border-bottom: 1px solid #16161E;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header.light {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header .form-inline {
+            margin: 0;
+        }
+
+        .header .form-inline input {
+            margin-right: 10px;
+        }
+
+        .main-header {
+            color: black;
+            padding: 15px 0;
+            text-align: center;
+        }
+
+        .gear-icon {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 30px;
+        }
+
+        .btn-custom {
+            margin: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .toast-container {
+            z-index: 1050;
+        }
+
+        .toast {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .toast-body {
+            padding: 1rem;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .flex-center-important {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex: 1 !important;
+            flex-direction: column !important;
+        }
+
+        /* Tema Escuro */
+        .modal-content-dark {
+            background-color: #343a40;
+            color: #ffffff;
+        }
+
+        .modal-header-dark {
+            border-bottom: 1px solid #474747;
+        }
+
+        .modal-footer-dark {
+            border-top: 1px solid #474747;
+        }
+
+        /* Tema Claro */
+        .modal-content-light {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .modal-header-light {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-footer-light {
+            border-top: 1px solid #dee2e6;
+        }
+
+        .window-buttons .btn-function-window {
+            color: black;
+            /* Default color */
+        }
+
+        .dark-theme .window-buttons .btn-function-window {
+            color: white;
+            /* White color for dark theme */
+        }
+
+        .window-buttons {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+        }
+
+        .custom-modal-body {
+            background-color: #fff;
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="window-buttons">
+        <button class="btn btn-function-window" id="minimize-btn">
+            <i class="fa fa-window-minimize"></i>
+        </button>
+        <button class="btn btn-function-window" id="expand-btn">
+            <i id="fullscreen-icon" class="fas fa-expand"></i>
+        </button>
+        <button class="btn btn-function-window" id="close-btn">
+            <i class="fas fa-times-circle"></i>
+        </button>
+
+    </div>
+    <i class="fas fa-cog gear-icon" data-toggle="modal" data-target="#gearModal" onclick="config()"></i>
+    <div id="spinner" class="full-screen-spinner">
+        <div class="loader"></div>
+    </div>
+    <!-- Configuração -->
+    <div class="modal fade" id="gearModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content"> <!-- Classe removida; será atualizada via JS -->
+                <div class="modal-header"> <!-- Classe removida; será atualizada via JS -->
+                    <h5 class="modal-title" id="exampleModalLabel">Configurações</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body flex-center-important" id="config">
+                    <div class="spinner"></div>
+                </div>
+                <p>ㅤVer automação</p>
+                <label class="switch">
+                    <input type="checkbox" id="click">
+                    <span class="slider"></span>
+                </label>
+                <div class="modal-footer"> <!-- Classe removida; será atualizada via JS -->
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmConfig()">Salvar mudanças</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header" style="
+              display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 90px;
+            margin-bottom: 20px
+    ">
+        <div class="form-inline">
+            <input id="login" class="form-control mr-2" type="text" placeholder="CNPJ/CPF">
+            <input id="senha" class="form-control" type="password" placeholder="Senha">
+            <button id="import-button" type="button" class="btn btn-primary" onclick="toggleExcelImport()">
+                Importar excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="main-header" style="
+    display: flex;
+  justify-content: center;
+  align-items: center;
+">
+        <h1>Painel de Relatórios</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+
+
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="btn-group" role="group" aria-label="Relatórios">
+                    <button class="btn btn-primary btn-custom" data-toggle="modal"
+                        data-target="#modalRelatorioPrestador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Relatório Prestador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#modalRelatorioTomador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Relatório Tomador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal"
+                        data-target="#modalDeclaracaoPrestador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Declaração Prestador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal"
+                        data-target="#modalDeclaracaoTomador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Declaração Tomador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal"
+                        data-target="#modalPortalContribuinte" onclick="Exec('PortalContribuinte')">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Portal
+                        Contribuinte</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#modalGuiaIssPrestador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Guia ISS Prestador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#modalGuiaIssTomador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        Guia ISS Tomador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#modalNfsTomador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        NFS
+                        Tomador</button>
+                    <button class="btn btn-primary btn-custom" data-toggle="modal" data-target="#modalNfsPrestador">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none;"></span>
+                        NFS
+                        Prestador</button>
+                </div>
+            </div>
+        </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container position-fixed bottom-0 right-0 p-3">
+        <!-- Toasts will be appended here -->
+    </div>
+    <!-- Modal Relatório Prestador -->
+    <div class="modal fade" id="modalRelatorioPrestador" tabindex="-1" role="dialog"
+        aria-labelledby="modalRelatorioPrestadorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalRelatorioPrestadorLabel">Relatório Prestador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="mesRelatorioPrestador">Mês</label>
+                            <input type="number" class="form-control" id="mesRelatorioPrestador"
+                                placeholder="Digite o mês">
+                        </div>
+                        <div class="form-group">
+                            <label for="anoRelatorioPrestador">Ano</label>
+                            <input type="number" class="form-control" id="anoRelatorioPrestador"
+                                placeholder="Digite o ano">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('RelatorioPrestador')">Gerar
+                        Relatório</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Relatório Tomador -->
+    <div class="modal fade" id="modalRelatorioTomador" tabindex="-1" role="dialog"
+        aria-labelledby="modalRelatorioTomadorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalRelatorioTomadorLabel">Relatório Tomador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="mesRelatorioTomador">Mês</label>
+                            <input type="number" class="form-control" id="mesRelatorioTomador"
+                                placeholder="Digite o mês">
+                        </div>
+                        <div class="form-group">
+                            <label for="anoRelatorioTomador">Ano</label>
+                            <input type="number" class="form-control" id="anoRelatorioTomador"
+                                placeholder="Digite o ano">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('RelatorioTomador')">Gerar
+                        Relatório</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Declaração Prestador -->
+    <div class="modal fade" id="modalDeclaracaoPrestador" tabindex="-1" role="dialog"
+        aria-labelledby="modalDeclaracaoPrestadorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDeclaracaoPrestadorLabel">Declaração Prestador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="mesDeclaracaoPrestador">Mês</label>
+                            <input type="number" class="form-control" id="mesDeclaracaoPrestador"
+                                placeholder="Digite o mês">
+                        </div>
+                        <div class="form-group">
+                            <label for="anoDeclaracaoPrestador">Ano</label>
+                            <input type="number" class="form-control" id="anoDeclaracaoPrestador"
+                                placeholder="Digite o ano">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('DeclaracaoPrestador')">Gerar
+                        Declaração</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Declaração Tomador -->
+    <div class="modal fade" id="modalDeclaracaoTomador" tabindex="-1" role="dialog"
+        aria-labelledby="modalDeclaracaoTomadorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDeclaracaoTomadorLabel">Declaração Tomador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="mesDeclaracaoTomador">Mês</label>
+                            <input type="number" class="form-control" id="mesDeclaracaoTomador"
+                                placeholder="Digite o mês">
+                        </div>
+                        <div class="form-group">
+                            <label for="anoDeclaracaoTomador">Ano</label>
+                            <input type="number" class="form-control" id="anoDeclaracaoTomador"
+                                placeholder="Digite o ano">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('DeclaracaoTomador')">Gerar
+                        Declaração</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Guia ISS Prestador -->
+    <div class="modal fade" id="modalGuiaIssPrestador" tabindex="-1" role="dialog"
+        aria-labelledby="modalGuiaIssPrestadorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalGuiaIssPrestadorLabel">Guia ISS Prestador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="mesGuiaIssPrestador">Mês</label>
+                            <input type="number" class="form-control" id="mesGuiaIssPrestador"
+                                placeholder="Digite o mês">
+                        </div>
+                        <div class="form-group">
+                            <label for="anoGuiaIssPrestador">Ano</label>
+                            <input type="number" class="form-control" id="anoGuiaIssPrestador"
+                                placeholder="Digite o ano">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('GuiaIssPrestador')">Gerar Guia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Guia ISS Tomador -->
+    <div class="modal fade" id="modalGuiaIssTomador" tabindex="-1" role="dialog"
+        aria-labelledby="modalGuiaIssTomadorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalGuiaIssTomadorLabel">Guia ISS Tomador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="mesGuiaIssTomador">Mês</label>
+                            <input type="number" class="form-control" id="mesGuiaIssTomador" placeholder="Digite o mês">
+                        </div>
+                        <div class="form-group">
+                            <label for="anoGuiaIssTomador">Ano</label>
+                            <input type="number" class="form-control" id="anoGuiaIssTomador" placeholder="Digite o ano">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('GuiaIssTomador')">Gerar Guia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal NFS Tomador -->
+    <div class="modal fade" id="modalNfsTomador" tabindex="-1" role="dialog" aria-labelledby="modalNfsTomadorLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNfsTomadorLabel">NFS Tomador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="inicioNfsTomador">Início</label>
+                            <input type="date" class="form-control" id="inicioNfsTomador"
+                                placeholder="Digite a data de início">
+                        </div>
+                        <div class="form-group">
+                            <label for="fimNfsTomador">Fim</label>
+                            <input type="date" class="form-control" id="fimNfsTomador"
+                                placeholder="Digite a data de fim">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('NfsTomador')">Gerar NFS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal NFS Prestador -->
+    <div class="modal fade" id="modalNfsPrestador" tabindex="-1" role="dialog" aria-labelledby="modalNfsPrestadorLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNfsPrestadorLabel">NFS Prestador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="inicioNfsPrestador">Início</label>
+                            <input type="date" class="form-control" id="inicioNfsPrestador"
+                                placeholder="Digite a data de início">
+                        </div>
+                        <div class="form-group">
+                            <label for="fimNfsPrestador">Fim</label>
+                            <input type="date" class="form-control" id="fimNfsPrestador"
+                                placeholder="Digite a data de fim">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="Exec('NfsPrestador')">Gerar NFS</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal fade" id="cpfModal" tabindex="-1" aria-labelledby="cpfModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cpfModalLabel">Selecione CPFs</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="cpf-checkboxes">
+                    <!-- Os checkboxes serão gerados aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="gerar-button">Gerar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="logsModal" tabindex="-1" role="dialog" aria-labelledby="logsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content custom-modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logsModalLabel">Logs</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body custom-modal-body">
+                    <pre id="logsContent"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="programarModal" tabindex="-1" role="dialog" aria-labelledby="programarModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl" style="min-width: 70%;" role="document">
+            <div class="modal-content custom-modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="programarModalLabel">Programar</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Top section with file input, date and time selector, and confirm button -->
+                    <div class="mb-3">
+                        <form id="uploadForm">
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label for="fileInput" class="sr-only">Selecionar arquivo XLSX</label>
+                                    <input type="file" class="form-control-file" id="fileInput" accept=".xlsx, .xls">
+                                    <label for="dayInput" class="sr-only">Selecionar dia</label>
+                                    <input type="number" class="form-control" id="dayInput" placeholder="Dia" min="1"
+                                        max="31">
+
+                                    <label for="timeInput" class="sr-only">Selecionar horário</label>
+                                    <input type="time" class="form-control" id="timeInput">
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-primary" id="addTaskBtn">Confirmar</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- List section -->
+                    <div id="taskList">
+                        <!-- Lista de tarefas será renderizada aqui -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div style="position: absolute; left: 20px; bottom: 20px">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#programarModal"
+            id="programar">Programar</button>
+        <button type="button" class="btn btn-danger" id="showLogsBtn">logs</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <!-- JavaScript Libraries -->
+    <script>
+        let arquivoSelecionado = false;
+        $('#showLogsBtn').click(function () {
+            // Chama a função exposta pelo pywebview
+            window.pywebview.api.get_logs().then(function (logs) {
+                $('#logsContent').text(logs);
+                $('#logsModal').modal('show');
+            });
+        });
+        $('#gerar-button').on('click', function () {
+            let selecionados = [];
+            $('#cpf-checkboxes input[type="checkbox"]:checked').each(function () {
+                selecionados.push({
+                    cnpj: $(this).val(),
+                    indice: $(this).attr('id').replace('cpfCheckbox', '')
+                });
+            });
+
+            window.pywebview.api.enviar_dados(selecionados).then(function (response) {
+                console.log('Dados enviados com sucesso:', response);
+            }).catch(function (error) {
+                console.error('Erro ao enviar dados:', error);
+            });
+        });
+
+        window.ver = function (on) {
+            if (on == 1) {
+                $('#click').prop('checked', true).change();
+            } else {
+                $('#click').prop('checked', false).change();
+            }
+        }
+
+        $('#click').click(() => {
+            if ($('#click').is(':checked')) {
+                window.pywebview.api.click(1);
+            } else {
+                window.pywebview.api.click(0);
+            }
+        })
+        function formatDate(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+        }
+
+        function toggleExcelImport() {
+            if (arquivoSelecionado) {
+                // Caso já tenha um arquivo selecionado, apaga o arquivo
+                window.pywebview.api.apagar_arquivo_excel().then(function () {
+                    document.getElementById('import-button').innerHTML = 'Importar excel';
+                    arquivoSelecionado = false;
+                });
+            } else {
+                // Se não, seleciona um novo arquivo
+                window.pywebview.api.selecionar_arquivo_excel().then(function (resposta) {
+                    if (resposta.nome_arquivo) {
+                        let displayName = resposta.nome_arquivo.length > 9 ? resposta.nome_arquivo.substring(0, 9) + '...' : resposta.nome_arquivo;
+                        document.getElementById('import-button').innerHTML = `<i class="fa fa-file-excel-o"></i> ${displayName}`;
+                        arquivoSelecionado = true;
+
+                        // Cria os checkboxes com base nos CPFs recebidos
+                        let cnpjcheckbox = document.getElementById('cpf-checkboxes');
+                        cnpjcheckbox.innerHTML = ''; // Limpa o container
+
+                        resposta.cnpjs.forEach(function (cnpjs, index) {
+                            let checkbox = `<div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="${cnpjs}" id="${index}" checked>
+                                    <label class="form-check-label" for="${index}">
+                                       ${cnpjs}
+                                    </label>
+                                </div>`;
+                            cnpjcheckbox.innerHTML += checkbox;
+                        });
+
+                        // Abre o modal
+                        $('#cpfModal').modal('show');
+                    }
+                });
+            }
+        }
+
+        function setCurrentMonthAndYear() {
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1; // Meses são baseados em 0, então adicionamos 1
+            const currentYear = now.getFullYear();
+            let iss = currentMonth - 2; // Meses são baseados em 0, então adicionamos 1
+            let ano = now.getFullYear(); // Meses são baseados em 0, então adicionamos 1
+            if (iss == 0) {
+                iss = 12
+                ano = ano - 1
+            } else if (iss == -1) {
+                iss = 11
+                ano = ano - 1
+            } else if (iss == -2) {
+                iss = 10
+                ano = ano - 1
+            }
+            document.getElementById('mesRelatorioPrestador').value = currentMonth;
+            document.getElementById('anoRelatorioPrestador').value = currentYear;
+            document.getElementById('mesRelatorioTomador').value = currentMonth;
+            document.getElementById('anoRelatorioTomador').value = currentYear;
+            document.getElementById('mesDeclaracaoPrestador').value = currentMonth;
+            document.getElementById('anoDeclaracaoPrestador').value = currentYear;
+            document.getElementById('mesDeclaracaoTomador').value = currentMonth;
+            document.getElementById('anoDeclaracaoTomador').value = currentYear;
+            document.getElementById('mesGuiaIssPrestador').value = iss;
+            document.getElementById('anoGuiaIssPrestador').value = ano;
+            document.getElementById('mesGuiaIssTomador').value = iss;
+            document.getElementById('anoGuiaIssTomador').value = ano;
+        }
+
+        function setPreviousMonthDates() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            // Calcula o mês passado
+            const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const yearForPreviousMonth = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+            // Define o primeiro dia do mês passado
+            const startOfPreviousMonth = new Date(yearForPreviousMonth, previousMonth, 1);
+            const endOfPreviousMonth = new Date(yearForPreviousMonth, previousMonth + 1, 0); // Último dia do mês passado
+
+            // Formata as datas para o formato yyyy-mm-dd
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            // Define os valores dos campos de data
+            document.getElementById('inicioNfsPrestador').value = formatDate(startOfPreviousMonth);
+            document.getElementById('fimNfsPrestador').value = formatDate(endOfPreviousMonth);
+            document.getElementById('inicioNfsTomador').value = formatDate(startOfPreviousMonth);
+            document.getElementById('fimNfsTomador').value = formatDate(endOfPreviousMonth);
+        }
+
+
+        // Chama a função quando o DOM está totalmente carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            setCurrentMonthAndYear();
+            setPreviousMonthDates();
+        });
+
+        function Exec(tipo) {
+            // Seleciona o botão correspondente ao tipo
+            const button = document.querySelector(`button[data-target="#modal${tipo}"]`);
+            const spinner = button.querySelector('.spinner-border');
+
+            // Mostra o spinner e desabilita o botão
+            button.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            // Fecha o modal correspondente
+            $(`#modal${tipo}`).modal('hide');
+            const login = document.getElementById('login').value;
+            const senha = document.getElementById('senha').value;
+
+            switch (tipo) {
+                case 'RelatorioPrestador':
+                    const mesRelatorioPrestador = document.getElementById('mesRelatorioPrestador').value;
+                    const anoRelatorioPrestador = document.getElementById('anoRelatorioPrestador').value;
+                    const loginRelatorioPrestador = document.getElementById('login').value;
+                    const senhaRelatorioPrestador = document.getElementById('senha').value;
+                    window.pywebview.api.RelatorioPrestador(loginRelatorioPrestador, senhaRelatorioPrestador, mesRelatorioPrestador, anoRelatorioPrestador);
+                    break;
+
+                case 'RelatorioTomador':
+                    const mesRelatorioTomador = document.getElementById('mesRelatorioTomador').value;
+                    const anoRelatorioTomador = document.getElementById('anoRelatorioTomador').value;
+                    const loginRelatorioTomador = document.getElementById('login').value;
+                    const senhaRelatorioTomador = document.getElementById('senha').value;
+                    window.pywebview.api.RelatorioTomador(loginRelatorioTomador, senhaRelatorioTomador, mesRelatorioTomador, anoRelatorioTomador);
+                    break;
+
+                case 'DeclaracaoPrestador':
+                    const mesDeclaracaoPrestador = document.getElementById('mesDeclaracaoPrestador').value;
+                    const anoDeclaracaoPrestador = document.getElementById('anoDeclaracaoPrestador').value;
+                    const loginDeclaracaoPrestador = document.getElementById('login').value;
+                    const senhaDeclaracaoPrestador = document.getElementById('senha').value;
+                    window.pywebview.api.DeclaracaoPrestador(loginDeclaracaoPrestador, senhaDeclaracaoPrestador, mesDeclaracaoPrestador, anoDeclaracaoPrestador);
+                    break;
+
+                case 'DeclaracaoTomador':
+                    const mesDeclaracaoTomador = document.getElementById('mesDeclaracaoTomador').value;
+                    const anoDeclaracaoTomador = document.getElementById('anoDeclaracaoTomador').value;
+                    const loginDeclaracaoTomador = document.getElementById('login').value;
+                    const senhaDeclaracaoTomador = document.getElementById('senha').value;
+                    window.pywebview.api.DeclaracaoTomador(loginDeclaracaoTomador, senhaDeclaracaoTomador, mesDeclaracaoTomador, anoDeclaracaoTomador);
+                    break;
+
+                case 'PortalContribuinte':
+                    window.pywebview.api.PortalContribuinte(document.getElementById('login').value);
+                    break;
+
+                case 'GuiaIssPrestador':
+                    const mesGuiaIssPrestador = document.getElementById('mesGuiaIssPrestador').value;
+                    const anoGuiaIssPrestador = document.getElementById('anoGuiaIssPrestador').value;
+                    const loginGuiaIssPrestador = document.getElementById('login').value;
+                    const senhaGuiaIssPrestador = document.getElementById('senha').value;
+                    window.pywebview.api.GuiaIssPrestador(loginGuiaIssPrestador, senhaGuiaIssPrestador, mesGuiaIssPrestador, anoGuiaIssPrestador);
+                    break;
+
+                case 'GuiaIssTomador':
+                    const mesGuiaIssTomador = document.getElementById('mesGuiaIssTomador').value;
+                    const anoGuiaIssTomador = document.getElementById('anoGuiaIssTomador').value;
+                    const loginGuiaIssTomador = document.getElementById('login').value;
+                    const senhaGuiaIssTomador = document.getElementById('senha').value;
+                    window.pywebview.api.GuiaIssTomador(loginGuiaIssTomador, senhaGuiaIssTomador, mesGuiaIssTomador, anoGuiaIssTomador);
+                    break;
+
+                case 'NfsTomador':
+                    const inicioNfsTomador = formatDate(document.getElementById('inicioNfsTomador').value);
+                    const fimNfsTomador = formatDate(document.getElementById('fimNfsTomador').value);
+                    const loginNfsTomador = document.getElementById('login').value;
+                    const senhaNfsTomador = document.getElementById('senha').value;
+                    window.pywebview.api.NfsTomador(loginNfsTomador, senhaNfsTomador, inicioNfsTomador, fimNfsTomador);
+                    break;
+
+                case 'NfsPrestador':
+                    const inicioNfsPrestador = formatDate(document.getElementById('inicioNfsPrestador').value);
+                    const fimNfsPrestador = formatDate(document.getElementById('fimNfsPrestador').value);
+                    const loginNfsPrestador = document.getElementById('login').value;
+                    const senhaNfsPrestador = document.getElementById('senha').value;
+                    window.pywebview.api.NfsPrestador(loginNfsPrestador, senhaNfsPrestador, inicioNfsPrestador, fimNfsPrestador);
+                    break;
+
+                default:
+                    console.error('Tipo de relatório desconhecido:', tipo);
+                    break;
+            }
+
+            // Define a função para lidar com a resposta do backend
+            window[tipo] = function (rodou = true) {
+                button.disabled = false;
+                spinner.style.display = 'none';
+                if (rodou == false) {
+                    button.classList.add('red-button');
+                }
+            };
+        }
+
+        function confirmConfig() {
+            const container = document.getElementById('config');
+            const inputs = container.querySelectorAll('input');
+            const dados = {};
+
+            inputs.forEach(input => {
+                dados[input.id] = input.value;
+            });
+
+            window.pywebview.api.confirmConfig(dados);
+            showSpinner();
+        }
+
+        window.confirmConfiguration = function () {
+            hideSpinner();
+            $('#gearModal').modal('hide');
+        }
+
+        window.selectedFolder = function (key, path) {
+            console.log(key)
+            console.log(path)
+            const input = document.getElementById(key);
+            if (input) {
+                input.value = path;
+            }
+        }
+
+        function config() {
+            window.pywebview.api.config();
+        }
+
+        // Recebe mensagens do processo principal
+        window.configuration = function (arg) {
+            const container = document.getElementById('config');
+            container.innerHTML = ''; // Limpa o conteúdo do container
+
+            for (const [key, value] of Object.entries(arg)) {
+                // Cria o rótulo
+                if (key == 'Ver') {
+                    continue
+                }
+                const label = document.createElement('label');
+                label.htmlFor = key;
+                label.textContent = key;
+                label.className = 'form-label'; // Classe do Bootstrap para rótulos
+
+                // Cria o input
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = key; // Define o ID do input
+                input.value = value.replace(/"/g, ''); // Remove as aspas duplas
+                input.className = 'form-control'; // Classe do Bootstrap para inputs
+                input.readOnly = true; // Define o input como somente leitura
+
+                // Adiciona o evento de clique para abrir o diálogo de seleção de pasta
+                input.addEventListener('click', () => {
+                    window.pywebview.api.open_folder_dialog(key);
+                });
+
+                // Cria o div e adiciona o rótulo e o input
+                const div = document.createElement('div');
+                div.className = 'mb-3'; // Margem inferior para espaçamento
+                div.style.width = '100%'; // Garante que o div ocupa 100% da largura do container
+                div.appendChild(label);
+                div.appendChild(input);
+
+                // Adiciona o div ao contêiner
+                container.appendChild(div);
+            }
+        }
+
+
+        // Atualiza o tema do modal com base na mudança de tema
+        function updateModalTheme(theme) {
+            const modals = document.querySelectorAll('.modal'); // Seleciona todos os modais
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+            modals.forEach(modal => {
+                const modalContent = modal.querySelector('.modal-content');
+                const modalHeader = modal.querySelector('.modal-header');
+                const modalFooter = modal.querySelector('.modal-footer');
+
+                if (theme === 'dark') {
+                    modalContent.classList.add('modal-content-dark');
+                    modalHeader.classList.add('modal-header-dark');
+                    modalFooter.classList.add('modal-footer-dark');
+                    modalContent.classList.remove('modal-content-light');
+                    modalHeader.classList.remove('modal-header-light');
+                    modalFooter.classList.remove('modal-footer-light');
+                } else {
+                    modalContent.classList.add('modal-content-light');
+                    modalHeader.classList.add('modal-header-light');
+                    modalFooter.classList.add('modal-footer-light');
+                    modalContent.classList.remove('modal-content-dark');
+                    modalHeader.classList.remove('modal-header-dark');
+                    modalFooter.classList.remove('modal-footer-dark');
+                }
+            });
+        }
+
+        window.onThemeChanged = function (theme) {
+            document.body.className = theme;
+            document.querySelector('header').className = theme;
+            updateModalTheme(theme);
+        };
+
+
+        function showSpinner() {
+            const spinner = document.getElementById('spinner');
+            spinner.classList.add('show');
+        }
+
+        // Função para ocultar o spinner
+        function hideSpinner() {
+            const spinner = document.getElementById('spinner');
+            spinner.classList.remove('show');
+        }
+
+        document.getElementById('close-btn').addEventListener('click', () => window.pywebview.api.close())
+        document.getElementById('minimize-btn').addEventListener('click', () => window.pywebview.api.minimize())
+        document.getElementById('expand-btn').addEventListener('click', () => window.pywebview.api.fullscreen())
+
+        window.renderTaskList = (tasks) => {
+            console.log(tasks);
+
+            // Se tasks não for um array, transformá-lo em um array
+            if (!Array.isArray(tasks)) {
+                tasks = [tasks];
+            }
+
+            $('#taskList').empty(); // Limpa a lista existente
+
+            tasks.forEach(task => {
+                const li = $('<li>').text(`Path: ${task.path} - Data: ${task.data}   `);
+                const deleteButton = $('<button class="btn btn-danger">').text('Deletar').on('click', () => deleteTask(task.path));
+
+                li.append(deleteButton);
+                $('#taskList').append(li);
+            });
+        };
+
+        function deleteTask(id) {
+            window.pywebview.api.deleteTask(id)
+        }
+
+        $('#programar').click(() => {
+            window.pywebview.api.taskList()
+        })
+        $('#addTaskBtn').click(function () {
+            // Obter valores dos inputs
+            var fileInput = $('#fileInput')[0].files[0]; // Arquivo selecionado
+            var dayInput = $('#dayInput').val(); // Dia selecionado
+            var timeInput = $('#timeInput').val(); // Horário selecionado
+
+            // Formatar a data e hora como "01 11:51"
+            var formattedData = dayInput.padStart(2, '0') + ' ' + timeInput;
+
+            // Verificar se o arquivo foi selecionado
+            if (fileInput && formattedData) {
+                // Usar o nome do arquivo como o caminho
+                var path = fileInput.name;
+
+                // Enviar os dados para a função Python via PyWebview API
+                window.pywebview.api.addTask(path, formattedData)
+                    .then(response => {
+                        console.log('Dados enviados com sucesso:', response);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao enviar dados:', error);
+                    });
+            } else {
+                console.error('Arquivo ou data/hora não selecionados.');
+            }
+        });
+    </script>
+</body>
+
+</html>
